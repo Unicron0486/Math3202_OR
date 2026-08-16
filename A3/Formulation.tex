@@ -1,0 +1,139 @@
+\documentclass{article}
+
+\usepackage[table,xcdraw]{xcolor}
+\usepackage{amsmath,amssymb,fullpage,adjustbox}
+\usepackage{dsfont}
+\setlength\parindent{0pt}
+\begin{document}
+
+	\section*{Ancestral skies Grounds keeping}
+	By Harry Hawkins 48019675
+	
+	\section*{General formulation}
+	The variables, definitions and transition function used for all three models.
+	The specififc values of $\mathds{P}(s | C_{st})$ will be adressed for each model along with the value function used.
+
+	\subsection*{Sets}
+	\begin{tabular}{rl}
+		$S$ & Sites\\
+		$P$ & Species
+	\end{tabular}
+
+	\subsection*{Data}
+	\begin{tabular}{rl}
+		$L_s$ & The species found at site $s\in S$\\
+		$N_s$ & The neighbouring sites of site $s\in S$\\
+		$\mathds{P}(s | C_{st})$ & Probability of site $s$ perishing by $t+1$ given the state $C_{st}$\\
+		$\mathds{P}(s' | s, A_s)$ & The transition function given as GenerateOutcomes giving all possible states\\
+		& when all possible actions are applied and the probability of them occuring.
+		
+	\end{tabular}
+		
+
+	\subsection*{Stages}
+	\begin{tabular}{rl}
+		$T$ & Months
+	\end{tabular}
+
+	\subsection*{States}
+	\begin{tabular}{rl}
+		$C_{st}$ & Condition of site $s\in S$ at the end of month $t\in T$\\
+		$x_t$ & The collection of $C_{st}$ $\forall s\in S$
+	\end{tabular}
+
+	\subsection*{Actions}
+	\begin{tabular}{rl}
+		$A_s$ & Save site $s\in S$, limited to one per month, by setting $C_{st} = 1$
+	\end{tabular}
+
+	\section*{Models}
+	For notation purposes, define $SpeciesSaved$ as folows:
+	\begin{equation*}
+		\sum_{p\in P} \begin{cases}
+			1 & \text{if $\exists s\in S$ $|$ $C_{st} = 1$ and $p\in L_s$}\\
+			0 & \text{otherwise}
+		\end{cases}
+	\end{equation*}
+
+	\subsection*{Com13}
+	Begin with initial state of all site are fragile.\\
+	$\mathds{P}(s | C_{st}) = 0.2$ $\forall s\in S$\\
+	\begin{equation*}
+	 	V(x_t) = \begin{cases}
+			SpeciesSaved & \text{if no fragile sites remain}\\
+			\max{} \sum \mathds{P}(x_{t+1})V(x_{t+1}), x_{t+1} = x_t + A_s & \text{otherwise}\\
+		\end{cases}
+	\end{equation*}
+
+	\subsection*{Com14}
+	Begin with initial state of all site are fragile.\\
+	The new probability of a site perishing is dependent on the neighbouring sites state.\\
+	$\mathds{P}(s | C_{st}) = 0.2 + 0.05 * \sum_{N_s} C_{st} = -1$ $\forall s\in S$\\
+	\begin{equation*}
+	 	V(C_{st}) = \begin{cases}
+			SpeciesSaved & \text{if no fragile sites remain}\\
+			\max{} \sum \mathds{P}(x_{t+1})V(x_{t+1}), x_{t+1} = x_t + A_s & \text{otherwise}\\
+		\end{cases}
+	\end{equation*}
+
+	\subsection*{Com15}
+	$\mathds{P}(s | C_{st}) = 0.2 + 0.05 * \sum_{N_s} C_{st} = -1$ $\forall s\in S$\\
+	\begin{equation*}
+		V(x_t) = \begin{cases}
+			1 & \text{no fragile states remain and all required species are saved}\\
+			0 & \text{no fragile states remain and not all required species are saved}\\
+			\max{} \sum \mathds{P}(x_{t+1})V(x_{t+1}), x_{t+1} = x_t + A_s & \text{otherwise}
+		\end{cases}
+	\end{equation*}
+	A note on the final commmunication: The first attempt of the model produced a schedual that did not 
+	include all sites. To adjust it the probability was skewed to favour higher sites. The probability value did
+	not change the result up to 7 significant values.
+
+	\newpage
+	\subsection{AI Decleration}
+	AI was used in communication 15 to adjust the model to favour full scheduals. See below
+	\\Q. This code skips one of 9 sites in the solution to find the optimal probability of 
+	protecting the species given in survives(s). I need it to favour producing a schedual with all 9 sites.
+	How do you suggest i do this. Do not show me the code solution, just need the idea.
+	$_Pbs = {}\\
+	def com15(s):\\
+    if s in _Pbs:\\
+        return _Pbs[s]\\
+    fragile = [i for i in Sites if s[i] == 0]\\
+    if fragile == []:\\
+        if survives(s):\\
+            _Pbs[s] = (1, [])\\
+            return (1, [])\\
+        _Pbs[s] = (0, [])\\
+        return(0, [])\\
+    best_sched = []\\
+    best_prob = 0\\
+    for a in fragile:\\
+        copy_s = list(s)\\
+        copy_s[a] = 1\\
+        copy_s = tuple(copy_s)\\
+        outcomes = GenerateOutcomes(copy_s, probabilities(copy_s))\\
+        temp = 0\\
+        sched = []\\
+        best_temp = -1\\
+        for y in outcomes:\\
+            prob, sch = com15(y[1])\\
+            temp += y[0]*prob\\
+            if prob > best_temp:\\
+                best_temp = prob\\
+                sched = list(sch)\\
+        if temp > best_prob:\\
+            best_prob = temp\\
+            best_sched = [a] + sched\\
+    _Pbs[s] = (best_prob, best_sched)\\
+    return (best_prob, best_sched)\\
+	$
+\\
+	A. It produced 3 cases but I only applied the second.\\
+	"Modify the objective to:
+		$score = probability + \epsilon \cdot  schedule_length$
+
+	This is a standard trick in DP when you want to bias toward longer or 
+	shorter solutions without changing the primary objective."
+
+\end{document}

@@ -1,0 +1,243 @@
+\documentclass{article}
+
+\usepackage[table,xcdraw]{xcolor}
+\usepackage{amsmath,amssymb,fullpage,adjustbox}
+\setlength\parindent{0pt}
+\begin{document}
+
+	\section*{NEO Detections}
+	
+	\subsection*{Sets}
+	
+	\begin{tabular}{rl}
+		$T$ & Telescopes\\
+		$B$ & Belts\\
+		$D$ & Days
+	\end{tabular}
+
+	\subsection*{Data}
+	
+	\begin{tabular}{rl}
+		$e_t$ & Efficiency of Neo detections of telescope $t\in T$\\
+		$n_d$ & Hours Neo belt is visible on day $d\in D$\\
+		$h_d$ & Total hours available to observe the main or neo belt on day $d\in D$\\
+		$r_b$ & The detection rate of NEOs in belt $b\in B$\\
+		$p$ & processing rate: 25Gb/hr of footage\\
+		$c$ & processing capacity: 500Gb\\
+	\end{tabular}
+
+	\subsection*{Variables}
+	
+	\begin{tabular}{rl}
+		$x_{dt}$ & How many hours a day $d\in D$ each telescope $t\in T$ observes the the NEO belt\\
+		$y_{dt}$ & How many hours a day $d\in D$ each telescope $t\in T$ observes the the main belt\\
+		$processed_{d}$ & The amount of data processed on day $d\in D$\\
+		$stored_{d}$ & The amount of raw data stored on day $d\in D$
+	\end{tabular}
+
+	\subsection*{Objective}
+	
+	\begin{equation*}
+	\max \sum_{d\in D}\sum_{t\in T}E_t(r_{neo} x_{dt} + r_{main} y_{dt})
+	\end{equation*}
+	
+	\subsection*{Constraints}
+	
+	\begin{align}
+		x_{dt} \leq N_d && \forall t\in T, \forall d\in D\label{C1}\\
+		% comm 2
+		y_{dt} \leq H_d - x_{dt} && \forall t\in \{T | t \notin (SA1, CL2)\}, \forall d\in D\label{C2}\\
+		y_{dt} \leq H_d && \forall t\in \{T | t \in (SA1, CL2)\}, \forall d\in D\label{C3}\\
+		y_{dt} \geq N_d && \forall t\in \{T | t \in (SA1, CL2)\}, \forall d\in D\label{C4}\\
+		% comm 3
+		% p(x_{dt} + y_{dt}) \leq c && \forall t\in \{T | t \notin (SA1, CL2)\}, \forall d\in D\label{C5}\\
+		% p(y_{dt}) \leq c && \forall t\in \{T | t \in (SA1, CL2)\}, \forall d\in D\label{C6}\\
+		% comm 4
+		\sum_{d\in D} x_{dt} + y_{dt} \geq 10 && \forall t \in T\label{C7}\\
+		(processed_{d} + stored_{d-1}) . p \leq c && \forall t\in \{T | t \notin (SA1, CL2)\}, \forall d\in D\label{C5}\\
+		processed_{d} . p \leq c && \forall t\in \{T | t \in (SA1, CL2)\}, \forall d\in D\label{C6}\\
+		% comm5
+		observation_{d} = \sum_{t\in T} x_{dt} + y_{dt} &&\forall t\in \{T | t \notin (SA1, CL2)\}, \forall d\in D\label{C15}\\
+		observation_{d} = \sum_{t\in T} y_{dt} &&\forall t\in \{T | t \in (SA1, CL2)\}, \forall d\in D\label{C14}\\
+		stored_{d} = observation_{d} - processed_{d} && \forall d\in D\label{C8}\\
+		stored_{d} . p \leq c && \forall d\in D\label{C9}\\
+		stored_{d} \geq 0 && \forall d\in D\label{C12}\\
+		stored_{d} \leq observation_{d} && \forall d\in D\label{C13}\\
+		%non neg
+		x_{dt} \geq 0 && \forall t\in T, \forall d\in D\label{C10}\\
+		y_{dt} \geq 0 && \forall t\in T, \forall d\in D\label{C11}
+	\end{align}
+	
+	
+	% Constraints (\ref{C1}) say that the amount mined from a deposit must not exceed its capacity, and constraints (\ref{C2}) ensure that each customer receives the tonnage they have requested. Constraints (\ref{C3}-\ref{C4}) enforce the minimum aluminium and silicon requirements respectively.
+	Constraints (\ref{C1}) states the Processed NEO data must be no more than the available time to observe the NEO belt.
+	Similarly (\ref{C2}) restricts the main belt processing to be the remaining observation time once the NEO belt has been observed. This is applied to all telescopes except SA1 and CL2 as they observe both belts simultaneously.
+	To address the simultaneous observation capabilities of SA1 and CL2 (\ref{C3}-\ref{C4}) make the total main belt observation equal to the NEO belt observation with the additional remaining time to observe the main belt.
+	(\ref{C5}-\ref{C6}) restrict the daily processing limit with SA1 and CL2 able to process the NEO and main belt footage together as it is one image.
+	The sumation in (\ref{C7}) specifys that all telescopes must be used at least 10 hours a week.
+	The constraints set out in (\ref{C8}-\ref{C13}) are specifically to address the use of additional storage and its maximum capacity. 
+	(\ref{C14}-\ref{C15}) simply define how $observation_{d}$ is calculated for the use of storage as the telescopes that can observe 
+	both belts simultaneously should not count observation time of both belts as it is one observation on both belts.
+	(\ref{C8}) is crucial as it defines where this storage can come from, the unporcessed observation footage.
+	Finally the non negative restrictions are applied to both variables in (\ref{C10}-\ref{C11})
+
+\newpage
+\section*{Client Report}
+\subsection*{Ancestral skies NEO detections}
+I will quickly adress the data I was given and used to create all results.
+
+main belt discovery rate: 2.2/hr
+NEO belt discovery rate: 3.4/hr
+
+% Telescope efficiencies
+\begin{table}[h]
+	\begin{tabular}{lccccccc}
+		\rowcolor[HTML]{FAFAFA} 
+		\textbf{Telescope}       & \textbf{AU1} & \textbf{CL1} & \textbf{SA1} &  \textbf{AU2} &  \textbf{CL2} &  \textbf{HI1}  \\
+		\rowcolor[HTML]{FAFAFA} 
+		\textbf{Efficiency (\%)} &  99           &  97         &  99           &  40           &  43           &  36            \\                   
+	\end{tabular}
+\end{table}
+% belt exposure table
+\begin{table}[h]
+	\begin{tabular}{lccccccc}
+		\rowcolor[HTML]{FAFAFA} 
+		{ \textbf{Day}}              & { \textbf{Mon}} & { \textbf{Tue}} & { \textbf{Wed}} & { \textbf{Thu}} & { \textbf{Fri}} & { \textbf{Sat}} & { \textbf{Sun}} \\
+		\rowcolor[HTML]{FAFAFA} 
+		{ \textbf{Total (hours)}}    & { 4.8}          & { 5.5}          & { 6.4}          & { 4.7}          & { 5.3}          & { 5.4}          & { 6.0}          \\
+		\rowcolor[HTML]{FAFAFA} 
+		{ \textbf{NEO Belt (hours)}} & { 3.3}          & { 3.8}          & { 3.9}          & { 3.4}          & { 3.6}          & { 3.8}          & { 4.7}          \\
+													& \multicolumn{1}{l}{}                & \multicolumn{1}{l}{}                & \multicolumn{1}{l}{}                & \multicolumn{1}{l}{}                & \multicolumn{1}{l}{}                & \multicolumn{1}{l}{}                & \multicolumn{1}{l}{}               
+	\end{tabular}
+\end{table}
+
+\subsection*{Communication 1}
+From the data given I found that the optimal expected number of detected NEOs was 478.7.
+This was with the constraint of having limited time to view the NEO belt and main belt and they could not be observed at the same time.
+The distribution of observation times for each belt was the same for each telescopes.
+This distribution is in the table below.
+
+\begin{table}[h]
+	\begin{tabular}{lcccccccccccc}
+		\cellcolor[HTML]{FAFAFA}{ \textbf{}}    & \cellcolor[HTML]{FAFAFA}{ \textbf{NEO}} & \cellcolor[HTML]{FAFAFA}{ \textbf{Main}} & \multicolumn{2}{c}{\cellcolor[HTML]{FAFAFA}{ \textbf{}}}                      & \multicolumn{2}{c}{\cellcolor[HTML]{FAFAFA}{ \textbf{}}}                      & \multicolumn{2}{c}{\cellcolor[HTML]{FAFAFA}{ \textbf{}}} & \multicolumn{2}{l}{}                                                   & \multicolumn{2}{l}{}                                                   \\
+		\cellcolor[HTML]{FAFAFA}{ \textbf{Mon}} & \cellcolor[HTML]{FAFAFA}{ 3.3}          & \cellcolor[HTML]{FAFAFA}{ 1.5}           & \cellcolor[HTML]{FAFAFA}{ } & \cellcolor[HTML]{FAFAFA}{ } & \cellcolor[HTML]{FAFAFA}{ } & \cellcolor[HTML]{FAFAFA}{ } & \cellcolor[HTML]{FAFAFA}{ }    & \multicolumn{1}{l}{}    & \multicolumn{1}{l}{}                            & \multicolumn{1}{l}{} & \multicolumn{1}{l}{}                            & \multicolumn{1}{l}{} \\
+		\cellcolor[HTML]{FAFAFA}{ Tues}         & \cellcolor[HTML]{FAFAFA}{ 3.8}          & \cellcolor[HTML]{FAFAFA}{ 1.7}           & \cellcolor[HTML]{FAFAFA}{ } & \cellcolor[HTML]{FAFAFA}{ } & \cellcolor[HTML]{FAFAFA}{ } & \cellcolor[HTML]{FAFAFA}{ } & \cellcolor[HTML]{FAFAFA}{ }    &                         & \cellcolor[HTML]{FAFAFA}{ } &                      & \cellcolor[HTML]{FAFAFA}{ } &                      \\
+		{ Wed}                                  & { 3.9}                                  & { 2.5}                                   & { }                         &                                                 & { }                         &                                                 & { }                            &                         & { }                         &                      & { }                         &                      \\
+		{ Thur}                                 & { 3.4}                                  & { 1.3}                                   & { }                         &                                                 & { }                         &                                                 & { }                            &                         & { }                         &                      & { }                         &                      \\
+		{ Fri}                                  & { 3.6}                                  & { 1.7}                                   & { }                         &                                                 & { }                         &                                                 & { }                            &                         & { }                         &                      & { }                         &                      \\
+		{ Sat}                                  & { 3.8}                                  & { 1.6}                                   & { }                         &                                                 & { }                         &                                                 & { }                            &                         & { }                         &                      & { }                         &                      \\
+		{ Sun}                                  & { 4.7}                                  & { 1.3}                                   & { }                         &                                                 & { }                         &                                                 & { }                            &                         & { }                         &                      & { }                         &                      \\
+		Sun                                                         & 4.7                                                         & 1.3                                                          & { }                         &                                                 & { }                         &                                                 & { }                            &                         & { }                         &                      & { }                         &                     
+	\end{tabular}
+\end{table}
+
+From this its clear that the NEO Belt should be observed for as long as possible no matter the telescope eficiency or day.
+
+\subsection*{Communication 2}
+With the additional specification that telescopes SA1 and CL2 can observe both belts simultaneously, the new expected NEOs detected increased to 561.5.
+This only affected the belt distribution of SA1 and CL2 as it allows full main belt observation as seen below. For all other telescopes the table from communication one is still the suggested distribution.
+
+\begin{table}[h]
+\begin{tabular}{lcccccccccccc}
+\multicolumn{1}{c}{\cellcolor[HTML]{FAFAFA}{ \textbf{\begin{tabular}[c]{@{}c@{}}Telescopes \\ SA1, CL2\end{tabular}}}} & \cellcolor[HTML]{FAFAFA}{ \textbf{NEO}} & \cellcolor[HTML]{FAFAFA}{ \textbf{Main}} & \multicolumn{2}{c}{\cellcolor[HTML]{FAFAFA}{ \textbf{}}}                      & \multicolumn{2}{c}{\cellcolor[HTML]{FAFAFA}{ \textbf{}}}                      & \multicolumn{2}{c}{\cellcolor[HTML]{FAFAFA}{ \textbf{}}} & \multicolumn{2}{l}{}                                                   & \multicolumn{2}{l}{}                                                   \\
+\cellcolor[HTML]{FAFAFA}{ \textbf{Mon}}                                                                                & \cellcolor[HTML]{FAFAFA}{ 3.3}          & \cellcolor[HTML]{FAFAFA}{ 4.8}           & \cellcolor[HTML]{FAFAFA}{ } & \cellcolor[HTML]{FAFAFA}{ } & \cellcolor[HTML]{FAFAFA}{ } & \cellcolor[HTML]{FAFAFA}{ } & \cellcolor[HTML]{FAFAFA}{ }    & \multicolumn{1}{l}{}    & \multicolumn{1}{l}{}                            & \multicolumn{1}{l}{} & \multicolumn{1}{l}{}                            & \multicolumn{1}{l}{} \\
+\cellcolor[HTML]{FAFAFA}{ Tues}                                                                                        & \cellcolor[HTML]{FAFAFA}{ 3.8}          & \cellcolor[HTML]{FAFAFA}{ 5.5}           & \cellcolor[HTML]{FAFAFA}{ } & \cellcolor[HTML]{FAFAFA}{ } & \cellcolor[HTML]{FAFAFA}{ } & \cellcolor[HTML]{FAFAFA}{ } & \cellcolor[HTML]{FAFAFA}{ }    &                         & \cellcolor[HTML]{FAFAFA}{ } &                      & \cellcolor[HTML]{FAFAFA}{ } &                      \\
+{ Wed}                                                                                                                 & { 3.9}                                  & { 6.4}                                   & { }                         &                                                 & { }                         &                                                 & { }                            &                         & { }                         &                      & { }                         &                      \\
+{ Thur}                                                                                                                & { 3.4}                                  & { 4.7}                                   & { }                         &                                                 & { }                         &                                                 & { }                            &                         & { }                         &                      & { }                         &                      \\
+{ Fri}                                                                                                                 & { 3.6}                                  & { 4.7}                                   & { }                         &                                                 & { }                         &                                                 & { }                            &                         & { }                         &                      & { }                         &                      \\
+{ Sat}                                                                                                                 & { 3.8}                                  & { 5.3}                                   & { }                         &                                                 & { }                         &                                                 & { }                            &                         & { }                         &                      & { }                         &                      \\
+{ Sun}                                                                                                                 & { 4.7}                                  & { 5.4}                                   & { }                         &                                                 & { }                         &                                                 & { }                            &                         & { }                         &                      & { }                         &                      \\
+                                                                                                                                           &                                                             &                                                              & { }                         &                                                 & { }                         &                                                 & { }                            &                         & { }                         &                      & { }                         &                     
+\end{tabular}
+\end{table}
+
+\newpage
+\subsection*{Communication 3}
+With the addition of a processing capacity for each day of 500Gb a day per telescope, this limited the amount of hours of images you can process to 20 hours worth.
+This reduced the expected NEOs detected to 456.7, but more interestingly has created a observation distribution unique for each telescope which can be seen below.
+\\\\
+\begin{adjustbox}{center}
+% \begin{table}[h]
+\begin{tabular}{lcccccccccccc}
+\multicolumn{1}{c}{\cellcolor[HTML]{FAFAFA}{ \textbf{Telescope}}} & \multicolumn{2}{c}{\cellcolor[HTML]{FAFAFA}{ \textbf{AU1}}}                                                                                      & \multicolumn{2}{c}{\cellcolor[HTML]{FAFAFA}{ \textbf{CL1}}}                                                                                      & \multicolumn{2}{c}{\cellcolor[HTML]{FAFAFA}{ \textbf{SA1}}}                                                                                      & \multicolumn{2}{c}{\cellcolor[HTML]{FAFAFA}{ \textbf{AU2}}}                                                                                      & \multicolumn{2}{c}{\cellcolor[HTML]{FAFAFA}{ \textbf{CL2}}}                                                                   & \multicolumn{2}{c}{\cellcolor[HTML]{FAFAFA}{ \textbf{HI1}}}                                                                                                                                             \\ \cline{2-13} 
+\rowcolor[HTML]{FAFAFA} 
+\multicolumn{1}{c|}{\cellcolor[HTML]{FAFAFA}{ \textbf{Belt}}}     & \multicolumn{1}{c|}{\cellcolor[HTML]{FAFAFA}{ \textbf{NEO}}} & \multicolumn{1}{c|}{\cellcolor[HTML]{FAFAFA}{ \textbf{Main}}} & \multicolumn{1}{c|}{\cellcolor[HTML]{FAFAFA}{ \textbf{NEO}}} & \multicolumn{1}{c|}{\cellcolor[HTML]{FAFAFA}{ \textbf{Main}}} & \multicolumn{1}{c|}{\cellcolor[HTML]{FAFAFA}{ \textbf{NEO}}} & \multicolumn{1}{c|}{\cellcolor[HTML]{FAFAFA}{ \textbf{Main}}} & \multicolumn{1}{c|}{\cellcolor[HTML]{FAFAFA}{ \textbf{NEO}}} & \multicolumn{1}{c|}{\cellcolor[HTML]{FAFAFA}{ \textbf{Main}}} & \multicolumn{1}{c|}{\cellcolor[HTML]{FAFAFA}{ \textbf{NEO}}} & \multicolumn{1}{c|}{\cellcolor[HTML]{FAFAFA}{ \textbf{Main}}} & \multicolumn{1}{c|}{\cellcolor[HTML]{FAFAFA}{ \textbf{NEO}}} & \multicolumn{1}{c|}{\cellcolor[HTML]{FAFAFA}{ \textbf{Main}}} \\ \cline{2-13} 
+\rowcolor[HTML]{FAFAFA} 
+\multicolumn{1}{l|}{\cellcolor[HTML]{FAFAFA}{ \textbf{Mon}}}      & \multicolumn{1}{c|}{\cellcolor[HTML]{FAFAFA}{ 3.3}}          & \multicolumn{1}{c|}{\cellcolor[HTML]{FAFAFA}{ 0}}             & \multicolumn{1}{c|}{\cellcolor[HTML]{FAFAFA}{ 3.3}}          & \multicolumn{1}{c|}{\cellcolor[HTML]{FAFAFA}{ 0}}             & \multicolumn{1}{c|}{\cellcolor[HTML]{FAFAFA}{ 3.3}}          & \multicolumn{1}{c|}{\cellcolor[HTML]{FAFAFA}{ 4.8}}           & \multicolumn{1}{c|}{\cellcolor[HTML]{FAFAFA}{ 2}}            & \multicolumn{1}{c|}{\cellcolor[HTML]{FAFAFA}{ 0}}             & \multicolumn{1}{c|}{\cellcolor[HTML]{FAFAFA}{ 3.3}}          & \multicolumn{1}{c|}{\cellcolor[HTML]{FAFAFA}{ 3.3}}           & \multicolumn{1}{c|}{\cellcolor[HTML]{FAFAFA}{ 3.3}}          & \multicolumn{1}{c|}{\cellcolor[HTML]{FAFAFA}{ 0}}             \\ \cline{2-13} 
+\rowcolor[HTML]{FAFAFA} 
+\multicolumn{1}{l|}{\cellcolor[HTML]{FAFAFA}{ Tues}}              & \multicolumn{1}{c|}{\cellcolor[HTML]{FAFAFA}{ 3.8}}          & \multicolumn{1}{c|}{\cellcolor[HTML]{FAFAFA}{ 0.6}}           & \multicolumn{1}{c|}{\cellcolor[HTML]{FAFAFA}{ 3.8}}          & \multicolumn{1}{c|}{\cellcolor[HTML]{FAFAFA}{ 0}}             & \multicolumn{1}{c|}{\cellcolor[HTML]{FAFAFA}{ 3.8}}          & \multicolumn{1}{c|}{\cellcolor[HTML]{FAFAFA}{ 5.5}}           & \multicolumn{1}{c|}{\cellcolor[HTML]{FAFAFA}{ 2.5}}          & \multicolumn{1}{c|}{\cellcolor[HTML]{FAFAFA}{ 0}}             & \multicolumn{1}{c|}{\cellcolor[HTML]{FAFAFA}{ 3.8}}          & \multicolumn{1}{c|}{\cellcolor[HTML]{FAFAFA}{ 3.8}}           & \multicolumn{1}{c|}{\cellcolor[HTML]{FAFAFA}{ 0}}            & \multicolumn{1}{c|}{\cellcolor[HTML]{FAFAFA}{ 0}}             \\ \cline{2-13} 
+\multicolumn{1}{l|}{{ Wed}}                                       & \multicolumn{1}{c|}{{ 3.9}}                                  & \multicolumn{1}{c|}{{ 1.9}}                                   & \multicolumn{1}{c|}{{ 3.9}}                                  & \multicolumn{1}{c|}{{ 0}}                                     & \multicolumn{1}{c|}{{ 3.9}}                                  & \multicolumn{1}{c|}{{ 6.4}}                                   & \multicolumn{1}{c|}{{ 0}}                                    & \multicolumn{1}{c|}{{ 0}}                                     & \multicolumn{1}{c|}{{ 3.9}}                                  & \multicolumn{1}{c|}{{ 3.9}}                                   & \multicolumn{1}{c|}{{ 0}}                                    & \multicolumn{1}{c|}{{ 0}}                                     \\ \cline{2-13} 
+\multicolumn{1}{l|}{{ Thur}}                                      & \multicolumn{1}{c|}{{ 3.4}}                                  & \multicolumn{1}{c|}{{ 1.3}}                                   & \multicolumn{1}{c|}{{ 3.4}}                                  & \multicolumn{1}{c|}{{ 0}}                                     & \multicolumn{1}{c|}{{ 3.4}}                                  & \multicolumn{1}{c|}{{ 3.4}}                                   & \multicolumn{1}{c|}{{ 1.7}}                                  & \multicolumn{1}{c|}{{ 0}}                                     & \multicolumn{1}{c|}{{ 3.4}}                                  & \multicolumn{1}{c|}{{ 3.4}}                                   & \multicolumn{1}{c|}{{ 3.4}}                                  & \multicolumn{1}{c|}{{ 0}}                                     \\ \cline{2-13} 
+\multicolumn{1}{l|}{{ Fri}}                                       & \multicolumn{1}{c|}{{ 3.6}}                                  & \multicolumn{1}{c|}{{ 0}}                                     & \multicolumn{1}{c|}{{ 3.6}}                                  & \multicolumn{1}{c|}{{ 0}}                                     & \multicolumn{1}{c|}{{ 3.6}}                                  & \multicolumn{1}{c|}{{ 5.3}}                                   & \multicolumn{1}{c|}{{ 0.6}}                                  & \multicolumn{1}{c|}{{ 0}}                                     & \multicolumn{1}{c|}{{ 3.6}}                                  & \multicolumn{1}{c|}{{ 3.6}}                                   & \multicolumn{1}{c|}{{ 3.3}}                                  & \multicolumn{1}{c|}{{ 0}}                                     \\ \cline{2-13} 
+\multicolumn{1}{l|}{{ Sat}}                                       & \multicolumn{1}{c|}{{ 3.8}}                                  & \multicolumn{1}{c|}{{ 0}}                                     & \multicolumn{1}{c|}{{ 3.8}}                                  & \multicolumn{1}{c|}{{ 0}}                                     & \multicolumn{1}{c|}{{ 3.8}}                                  & \multicolumn{1}{c|}{{ 5.4}}                                   & \multicolumn{1}{c|}{{ 3.2}}                                  & \multicolumn{1}{c|}{{ 0}}                                     & \multicolumn{1}{c|}{{ 3.8}}                                  & \multicolumn{1}{c|}{{ 3.8}}                                   & \multicolumn{1}{c|}{{ 0}}                                    & \multicolumn{1}{c|}{{ 0}}                                     \\ \cline{2-13} 
+\multicolumn{1}{l|}{{ Sun}}                                       & \multicolumn{1}{c|}{{ 4.7}}                                  & \multicolumn{1}{c|}{{ 0}}                                     & \multicolumn{1}{c|}{{ 4.7}}                                  & \multicolumn{1}{c|}{{ 0}}                                     & \multicolumn{1}{c|}{{ 4.7}}                                  & \multicolumn{1}{c|}{{ 5.9}}                                   & \multicolumn{1}{c|}{{ 0}}                                    & \multicolumn{1}{c|}{{ 0}}                                     & \multicolumn{1}{c|}{{ 4.7}}                                  & \multicolumn{1}{c|}{{ 4.7}}                                   & \multicolumn{1}{c|}{{ 0}}                                    & \multicolumn{1}{c|}{{ 0}}                                     \\ \cline{2-13} 
+\end{tabular}
+% \end{table}
+\end{adjustbox}
+\\\\
+With the processing restriction you can see that the HI1 telescope is not in use due to its low detection efficiency.
+The AU2 telescope with the second lowest efficiency should not bserve the main belt but is still briefly in use when the NEO belt is visible
+Also the SA1 and CL2 telescopes only record for the time that the NEO belt is visible.
+The SA1 with the highest efficiency is used the most at almost for the maximum time the main belt is visible.
+
+
+\subsection*{Communication 4}
+Bringing the minimum use of each telescope up to 10 hours a week for a true collaboration, we increase the use of Telecsope HI1.
+Of course it still only observes the NEO Belt for optimal detections for which we expect a total of 443.7.
+\\\\
+\begin{adjustbox}{center}
+	% \begin{table}[h]
+		\begin{tabular}{lcccccccccccc}
+		\multicolumn{1}{c}{\cellcolor[HTML]{FAFAFA}{ \textbf{Telescope}}} & \multicolumn{2}{c}{\cellcolor[HTML]{FAFAFA}{ \textbf{AU1}}}                                                                                      & \multicolumn{2}{c}{\cellcolor[HTML]{FAFAFA}{ \textbf{CL1}}}                                                                                      & \multicolumn{2}{c}{\cellcolor[HTML]{FAFAFA}{ \textbf{SA1}}}                                                                                      & \multicolumn{2}{c}{\cellcolor[HTML]{FAFAFA}{ \textbf{AU2}}}                                                                                      & \multicolumn{2}{c}{\cellcolor[HTML]{FAFAFA}{ \textbf{CL2}}}                                                                   & \multicolumn{2}{c}{\cellcolor[HTML]{FAFAFA}{ \textbf{HI1}}}                                                                                                                                             \\ \cline{2-13} 
+		\rowcolor[HTML]{FAFAFA} 
+		\multicolumn{1}{c|}{\cellcolor[HTML]{FAFAFA}{ \textbf{Belt}}}     & \multicolumn{1}{c|}{\cellcolor[HTML]{FAFAFA}{ \textbf{NEO}}} & \multicolumn{1}{c|}{\cellcolor[HTML]{FAFAFA}{ \textbf{Main}}} & \multicolumn{1}{c|}{\cellcolor[HTML]{FAFAFA}{ \textbf{NEO}}} & \multicolumn{1}{c|}{\cellcolor[HTML]{FAFAFA}{ \textbf{Main}}} & \multicolumn{1}{c|}{\cellcolor[HTML]{FAFAFA}{ \textbf{NEO}}} & \multicolumn{1}{c|}{\cellcolor[HTML]{FAFAFA}{ \textbf{Main}}} & \multicolumn{1}{c|}{\cellcolor[HTML]{FAFAFA}{ \textbf{NEO}}} & \multicolumn{1}{c|}{\cellcolor[HTML]{FAFAFA}{ \textbf{Main}}} & \multicolumn{1}{c|}{\cellcolor[HTML]{FAFAFA}{ \textbf{NEO}}} & \multicolumn{1}{c|}{\cellcolor[HTML]{FAFAFA}{ \textbf{Main}}} & \multicolumn{1}{c|}{\cellcolor[HTML]{FAFAFA}{ \textbf{NEO}}} & \multicolumn{1}{c|}{\cellcolor[HTML]{FAFAFA}{ \textbf{Main}}} \\ \cline{2-13} 
+		\rowcolor[HTML]{FAFAFA} 
+		\multicolumn{1}{l|}{\cellcolor[HTML]{FAFAFA}{ \textbf{Mon}}}      & \multicolumn{1}{c|}{\cellcolor[HTML]{FAFAFA}{ 3.3}}          & \multicolumn{1}{c|}{\cellcolor[HTML]{FAFAFA}{ 0}}             & \multicolumn{1}{c|}{\cellcolor[HTML]{FAFAFA}{ 3.3}}          & \multicolumn{1}{c|}{\cellcolor[HTML]{FAFAFA}{ 0}}             & \multicolumn{1}{c|}{\cellcolor[HTML]{FAFAFA}{ 3.3}}          & \multicolumn{1}{c|}{\cellcolor[HTML]{FAFAFA}{ 4.8}}           & \multicolumn{1}{c|}{\cellcolor[HTML]{FAFAFA}{ 2}}            & \multicolumn{1}{c|}{\cellcolor[HTML]{FAFAFA}{ 0}}             & \multicolumn{1}{c|}{\cellcolor[HTML]{FAFAFA}{ 3.3}}          & \multicolumn{1}{c|}{\cellcolor[HTML]{FAFAFA}{ 3.3}}           & \multicolumn{1}{c|}{\cellcolor[HTML]{FAFAFA}{ 3.3}}          & \multicolumn{1}{c|}{\cellcolor[HTML]{FAFAFA}{ 0}}             \\ \cline{2-13} 
+		\rowcolor[HTML]{FAFAFA} 
+		\multicolumn{1}{l|}{\cellcolor[HTML]{FAFAFA}{ Tues}}              & \multicolumn{1}{c|}{\cellcolor[HTML]{FAFAFA}{ 3.8}}          & \multicolumn{1}{c|}{\cellcolor[HTML]{FAFAFA}{ 0.6}}           & \multicolumn{1}{c|}{\cellcolor[HTML]{FAFAFA}{ 3.8}}          & \multicolumn{1}{c|}{\cellcolor[HTML]{FAFAFA}{ 0}}             & \multicolumn{1}{c|}{\cellcolor[HTML]{FAFAFA}{ 3.8}}          & \multicolumn{1}{c|}{\cellcolor[HTML]{FAFAFA}{ 5.5}}           & \multicolumn{1}{c|}{\cellcolor[HTML]{FAFAFA}{ 2.5}}          & \multicolumn{1}{c|}{\cellcolor[HTML]{FAFAFA}{ 0}}             & \multicolumn{1}{c|}{\cellcolor[HTML]{FAFAFA}{ 3.8}}          & \multicolumn{1}{c|}{\cellcolor[HTML]{FAFAFA}{ 3.8}}           & \multicolumn{1}{c|}{\cellcolor[HTML]{FAFAFA}{ 0}}            & \multicolumn{1}{c|}{\cellcolor[HTML]{FAFAFA}{ 0}}             \\ \cline{2-13} 
+		\multicolumn{1}{l|}{{ Wed}}                                       & \multicolumn{1}{c|}{{ 3.9}}                                  & \multicolumn{1}{c|}{{ 1.9}}                                   & \multicolumn{1}{c|}{{ 3.9}}                                  & \multicolumn{1}{c|}{{ 0}}                                     & \multicolumn{1}{c|}{{ 3.9}}                                  & \multicolumn{1}{c|}{{ 6.4}}                                   & \multicolumn{1}{c|}{{ 0}}                                    & \multicolumn{1}{c|}{{ 0}}                                     & \multicolumn{1}{c|}{{ 3.9}}                                  & \multicolumn{1}{c|}{{ 3.9}}                                   & \multicolumn{1}{c|}{{ 0}}                                    & \multicolumn{1}{c|}{{ 0}}                                     \\ \cline{2-13} 
+		\multicolumn{1}{l|}{{ Thur}}                                      & \multicolumn{1}{c|}{{ 3.4}}                                  & \multicolumn{1}{c|}{{ 1.3}}                                   & \multicolumn{1}{c|}{{ 3.4}}                                  & \multicolumn{1}{c|}{{ 0}}                                     & \multicolumn{1}{c|}{{ 3.4}}                                  & \multicolumn{1}{c|}{{ 3.4}}                                   & \multicolumn{1}{c|}{{ 1.7}}                                  & \multicolumn{1}{c|}{{ 0}}                                     & \multicolumn{1}{c|}{{ 3.4}}                                  & \multicolumn{1}{c|}{{ 3.4}}                                   & \multicolumn{1}{c|}{{ 3.4}}                                  & \multicolumn{1}{c|}{{ 0}}                                     \\ \cline{2-13} 
+		\multicolumn{1}{l|}{{ Fri}}                                       & \multicolumn{1}{c|}{{ 3.6}}                                  & \multicolumn{1}{c|}{{ 0}}                                     & \multicolumn{1}{c|}{{ 3.6}}                                  & \multicolumn{1}{c|}{{ 0}}                                     & \multicolumn{1}{c|}{{ 3.6}}                                  & \multicolumn{1}{c|}{{ 5.3}}                                   & \multicolumn{1}{c|}{{ 0.6}}                                  & \multicolumn{1}{c|}{{ 0}}                                     & \multicolumn{1}{c|}{{ 3.6}}                                  & \multicolumn{1}{c|}{{ 3.6}}                                   & \multicolumn{1}{c|}{{ 3.3}}                                  & \multicolumn{1}{c|}{{ 0}}                                     \\ \cline{2-13} 
+		\multicolumn{1}{l|}{{ Sat}}                                       & \multicolumn{1}{c|}{{ 3.8}}                                  & \multicolumn{1}{c|}{{ 0}}                                     & \multicolumn{1}{c|}{{ 3.8}}                                  & \multicolumn{1}{c|}{{ 0}}                                     & \multicolumn{1}{c|}{{ 3.8}}                                  & \multicolumn{1}{c|}{{ 5.4}}                                   & \multicolumn{1}{c|}{{ 3.2}}                                  & \multicolumn{1}{c|}{{ 0}}                                     & \multicolumn{1}{c|}{{ 3.8}}                                  & \multicolumn{1}{c|}{{ 3.8}}                                   & \multicolumn{1}{c|}{{ 0}}                                    & \multicolumn{1}{c|}{{ 0}}                                     \\ \cline{2-13} 
+		\multicolumn{1}{l|}{{ Sun}}                                       & \multicolumn{1}{c|}{{ 4.7}}                                  & \multicolumn{1}{c|}{{ 0}}                                     & \multicolumn{1}{c|}{{ 4.7}}                                  & \multicolumn{1}{c|}{{ 0}}                                     & \multicolumn{1}{c|}{{ 4.7}}                                  & \multicolumn{1}{c|}{{ 5.9}}                                   & \multicolumn{1}{c|}{{ 0}}                                    & \multicolumn{1}{c|}{{ 0}}                                     & \multicolumn{1}{c|}{{ 4.7}}                                  & \multicolumn{1}{c|}{{ 4.7}}                                   & \multicolumn{1}{c|}{{ 0}}                                    & \multicolumn{1}{c|}{{ 0}}                                     \\ \cline{2-13} 
+		\end{tabular}
+	% \end{table}
+\end{adjustbox}
+\\\\
+Most of the hours added to HI1 and AU2 were taken from main belt observation time of AU1 and CL1 as these do not have as good efficiency than SA1.
+A decrease in the detected NEOs was expected as we are forcing the use of less eficient telescopes.
+
+\subsection*{Communication 5 - Final Model}
+With the adition of storage the optimal expected NEOs is 486.7 a slight increase from before storage.
+Some assumptions that were made include that the initial amount of stored data is 0. This would be
+accurate for the first week you implement this disribution however the weeks following should include
+the data stored in the last day of the previous week.
+\\\\
+\begin{adjustbox}{center}\begin{tabular}{lcccccccccccc}
+	\multicolumn{1}{c}{\cellcolor[HTML]{FAFAFA}{ \textbf{Telescope}}} & \multicolumn{2}{c}{\cellcolor[HTML]{FAFAFA}{ \textbf{AU1}}}                                                                                      & \multicolumn{2}{c}{\cellcolor[HTML]{FAFAFA}{ \textbf{CL1}}}                                                                                      & \multicolumn{2}{c}{\cellcolor[HTML]{FAFAFA}{ \textbf{SA1}}}                                                                                      & \multicolumn{2}{c}{\cellcolor[HTML]{FAFAFA}{ \textbf{AU2}}}                                                                                      & \multicolumn{2}{c}{\cellcolor[HTML]{FAFAFA}{ \textbf{CL2}}}                                                                   & \multicolumn{2}{c}{\cellcolor[HTML]{FAFAFA}{ \textbf{HI1}}}                                                                                                                                             \\ \cline{2-13} 
+	\rowcolor[HTML]{FAFAFA} 
+	\multicolumn{1}{c|}{\cellcolor[HTML]{FAFAFA}{ \textbf{Belt}}}     & \multicolumn{1}{c|}{\cellcolor[HTML]{FAFAFA}{ \textbf{NEO}}} & \multicolumn{1}{c|}{\cellcolor[HTML]{FAFAFA}{ \textbf{Main}}} & \multicolumn{1}{c|}{\cellcolor[HTML]{FAFAFA}{ \textbf{NEO}}} & \multicolumn{1}{c|}{\cellcolor[HTML]{FAFAFA}{ \textbf{Main}}} & \multicolumn{1}{c|}{\cellcolor[HTML]{FAFAFA}{ \textbf{NEO}}} & \multicolumn{1}{c|}{\cellcolor[HTML]{FAFAFA}{ \textbf{Main}}} & \multicolumn{1}{c|}{\cellcolor[HTML]{FAFAFA}{ \textbf{NEO}}} & \multicolumn{1}{c|}{\cellcolor[HTML]{FAFAFA}{ \textbf{Main}}} & \multicolumn{1}{c|}{\cellcolor[HTML]{FAFAFA}{ \textbf{NEO}}} & \multicolumn{1}{c|}{\cellcolor[HTML]{FAFAFA}{ \textbf{Main}}} & \multicolumn{1}{c|}{\cellcolor[HTML]{FAFAFA}{ \textbf{NEO}}} & \multicolumn{1}{c|}{\cellcolor[HTML]{FAFAFA}{ \textbf{Main}}} \\ \cline{2-13} 
+	\rowcolor[HTML]{FAFAFA} 
+	\multicolumn{1}{l|}{\cellcolor[HTML]{FAFAFA}{ \textbf{Mon}}}      & \multicolumn{1}{c|}{\cellcolor[HTML]{FAFAFA}{ 3.3}}          & \multicolumn{1}{c|}{\cellcolor[HTML]{FAFAFA}{ 1.5}}           & \multicolumn{1}{c|}{\cellcolor[HTML]{FAFAFA}{ 3.3}}          & \multicolumn{1}{c|}{\cellcolor[HTML]{FAFAFA}{ 0.8}}           & \multicolumn{1}{c|}{\cellcolor[HTML]{FAFAFA}{ 3.3}}          & \multicolumn{1}{c|}{\cellcolor[HTML]{FAFAFA}{ 4.8}}           & \multicolumn{1}{c|}{\cellcolor[HTML]{FAFAFA}{ 0}}            & \multicolumn{1}{c|}{\cellcolor[HTML]{FAFAFA}{ 0}}             & \multicolumn{1}{c|}{\cellcolor[HTML]{FAFAFA}{ 3.3}}          & \multicolumn{1}{c|}{\cellcolor[HTML]{FAFAFA}{ 3.3}}           & \multicolumn{1}{c|}{\cellcolor[HTML]{FAFAFA}{ 3}}            & \multicolumn{1}{c|}{\cellcolor[HTML]{FAFAFA}{ 0}}             \\ \cline{2-13} 
+	\rowcolor[HTML]{FAFAFA} 
+	\multicolumn{1}{l|}{\cellcolor[HTML]{FAFAFA}{ Tues}}              & \multicolumn{1}{c|}{\cellcolor[HTML]{FAFAFA}{ 3.8}}          & \multicolumn{1}{c|}{\cellcolor[HTML]{FAFAFA}{ 1.7}}           & \multicolumn{1}{c|}{\cellcolor[HTML]{FAFAFA}{ 3.8}}          & \multicolumn{1}{c|}{\cellcolor[HTML]{FAFAFA}{ 1.6}}           & \multicolumn{1}{c|}{\cellcolor[HTML]{FAFAFA}{ 3.8}}          & \multicolumn{1}{c|}{\cellcolor[HTML]{FAFAFA}{ 5.5}}           & \multicolumn{1}{c|}{\cellcolor[HTML]{FAFAFA}{ 1.4}}          & \multicolumn{1}{c|}{\cellcolor[HTML]{FAFAFA}{ 0}}             & \multicolumn{1}{c|}{\cellcolor[HTML]{FAFAFA}{ 3.8}}          & \multicolumn{1}{c|}{\cellcolor[HTML]{FAFAFA}{ 3.8}}           & \multicolumn{1}{c|}{\cellcolor[HTML]{FAFAFA}{ 0}}            & \multicolumn{1}{c|}{\cellcolor[HTML]{FAFAFA}{ 0}}             \\ \cline{2-13} 
+	\multicolumn{1}{l|}{{ Wed}}                                       & \multicolumn{1}{c|}{{ 3.9}}                                  & \multicolumn{1}{c|}{{ 2.5}}                                   & \multicolumn{1}{c|}{{ 3.9}}                                  & \multicolumn{1}{c|}{{ 2.5}}                                   & \multicolumn{1}{c|}{{ 3.9}}                                  & \multicolumn{1}{c|}{{ 6.4}}                                   & \multicolumn{1}{c|}{{ 3.9}}                                  & \multicolumn{1}{c|}{{ 0}}                                     & \multicolumn{1}{c|}{{ 3.9}}                                  & \multicolumn{1}{c|}{{ 3.9}}                                   & \multicolumn{1}{c|}{{ 0}}                                    & \multicolumn{1}{c|}{{ 0}}                                     \\ \cline{2-13} 
+	\multicolumn{1}{l|}{{ Thur}}                                      & \multicolumn{1}{c|}{{ 3.4}}                                  & \multicolumn{1}{c|}{{ 1.3}}                                   & \multicolumn{1}{c|}{{ 3.4}}                                  & \multicolumn{1}{c|}{{ 1.3}}                                   & \multicolumn{1}{c|}{{ 3.4}}                                  & \multicolumn{1}{c|}{{ 4.7}}                                   & \multicolumn{1}{c|}{{ 0}}                                    & \multicolumn{1}{c|}{{ 0}}                                     & \multicolumn{1}{c|}{{ 3.4}}                                  & \multicolumn{1}{c|}{{ 3.4}}                                   & \multicolumn{1}{c|}{{ 3.4}}                                  & \multicolumn{1}{c|}{{ 0}}                                     \\ \cline{2-13} 
+	\multicolumn{1}{l|}{{ Fri}}                                       & \multicolumn{1}{c|}{{ 3.6}}                                  & \multicolumn{1}{c|}{{ 1.7}}                                   & \multicolumn{1}{c|}{{ 3.6}}                                  & \multicolumn{1}{c|}{{ 1.7}}                                   & \multicolumn{1}{c|}{{ 3.6}}                                  & \multicolumn{1}{c|}{{ 5.3}}                                   & \multicolumn{1}{c|}{{ 0}}                                    & \multicolumn{1}{c|}{{ 0}}                                     & \multicolumn{1}{c|}{{ 3.6}}                                  & \multicolumn{1}{c|}{{ 3.6}}                                   & \multicolumn{1}{c|}{{ 3.6}}                                  & \multicolumn{1}{c|}{{ 0}}                                     \\ \cline{2-13} 
+	\multicolumn{1}{l|}{{ Sat}}                                       & \multicolumn{1}{c|}{{ 3.8}}                                  & \multicolumn{1}{c|}{{ 1.6}}                                   & \multicolumn{1}{c|}{{ 3.8}}                                  & \multicolumn{1}{c|}{{ 1.6}}                                   & \multicolumn{1}{c|}{{ 3.8}}                                  & \multicolumn{1}{c|}{{ 5.4}}                                   & \multicolumn{1}{c|}{{ 0}}                                    & \multicolumn{1}{c|}{{ 0}}                                     & \multicolumn{1}{c|}{{ 3.8}}                                  & \multicolumn{1}{c|}{{ 3.8}}                                   & \multicolumn{1}{c|}{{ 0}}                                    & \multicolumn{1}{c|}{{ 0}}                                     \\ \cline{2-13} 
+	\multicolumn{1}{l|}{{ Sun}}                                       & \multicolumn{1}{c|}{{ 4.7}}                                  & \multicolumn{1}{c|}{{ 1.3}}                                   & \multicolumn{1}{c|}{{ 4.7}}                                  & \multicolumn{1}{c|}{{ 1.3}}                                   & \multicolumn{1}{c|}{{ 4.7}}                                  & \multicolumn{1}{c|}{{ 6.0}}                                   & \multicolumn{1}{c|}{{ 4.7}}                                  & \multicolumn{1}{c|}{{ 0}}                                     & \multicolumn{1}{c|}{{ 4.7}}                                  & \multicolumn{1}{c|}{{ 4.7}}                                   & \multicolumn{1}{c|}{{ 0}}                                    & \multicolumn{1}{c|}{{ 0}}                                     \\ \cline{2-13} 
+	\end{tabular}
+\end{adjustbox}
+\\\\
+The Hawaii telescope is still used the least with it having the lowest efficiency. Being able to observe both belts at the same time makes utilising
+SA1 and CL2 desirable as it gives more possible detections at less processing cost. Furthermore the NEO belt observation times are maximised for these two telescopes as it 
+observes both regions at once. The Neo belt observation time is included for these in the table for these to illustrate when additional observation time is used only for the main belt.
+A trend of the distributions is to utilise the NEO belt exposure time as much as possible due to its better rate of detections.
+\\\\
+Therefore to optimise the use of the Ancestral Skies resources the distribution of telescope observation time and belt to observe
+should be that found in the table above given the restrictions and extensions communicated to me.
+% Phenomena associated with Near-Earth Objects (NEOs) have long been important in reinforcing cultural law, 
+% spirituality, and the moral structure of our communities. We are putting together a proposal to use our 
+% resources in searching for NEOs and need assistance in optimising how our telescopes should work together 
+% to improve our expected detection rate.
+\end{document}

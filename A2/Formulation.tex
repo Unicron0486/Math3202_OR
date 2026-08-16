@@ -1,0 +1,344 @@
+\documentclass{article}
+
+\usepackage[table,xcdraw]{xcolor}
+\usepackage{amsmath,amssymb,fullpage,adjustbox}
+\setlength\parindent{0pt}
+\begin{document}
+
+	\section*{Ancestral skies staffing}
+	By Harry Hawkins 48019675
+	
+	\subsection*{Sets}
+	
+	\begin{tabular}{rl}
+		$S$ & Skills\\
+		$J$ & Tasks\\
+		$I$ & Technician\\
+		$D$ & Days
+	\end{tabular}
+
+	\subsection*{Data}
+	
+	\begin{tabular}{rl}
+		$e_{is}$ & score of technician $i\in I$ for skill $s\in S$\\
+		$k_j$ & skill required for job $j\in J$\\
+		$t_j$ & time required to complete task $j\in J$\\
+		$p_j$ & number of technicians required to complete task $j\in J$\\
+		$a_j$ & title description of task $j\in J$\\
+		$M$ & maximum time available for each technician: 36 hours a week\\
+		$Md$ & maximum time available for each technician on day $d\in D$: 10 hours a day\\
+		$b$ & bonus score after training: 7
+
+
+	\end{tabular}
+
+	\subsection*{Variables}
+	
+	\begin{tabular}{rl}
+		$X_{ij}$ & Binary variable of technician $i\in I$ allocated to task $j\in J$\\
+		$W_{id}$ & Binary variable of technician $i\in I$ working on day $d\in D$\\
+		$Y_{is}$ & Binary variable representing if technician $i\in I$ receives training for skill $s\in S$\\
+		$T_i$ & Time allocated to technician $i\in I$ on day $d\in D$\\
+		$L_j$ & Total skill allocated to task $j\in J$\\
+		$H_{id}$ & Hours worked by a technician $i\in I$ on day $d\in D$\\
+	\end{tabular}
+
+	\subsection*{Objective}
+	Optimise the skill scores to complete all tasks
+	\begin{equation*}
+		\max \sum_{j\in J} L_j
+	\end{equation*}
+	
+	\subsection*{Constraints}
+	
+	\begin{align}
+		X_{ij} \in {0,1} & \quad \forall i\in I, j\in J \label{C1}\\
+		Y_{is} \in {0,1} & \quad \forall i\in I, s\in S \label{C15}\\
+		T_{id} = \sum_{j\in J} t_j . x_{ij} & \quad \forall i\in I \label{C2}\\
+		T_{id} \leq M & \quad \forall i\in I \label{C3}\\
+		L_j = \sum_{i\in I} (e_{ik} . x_{ij} + Y_{ik} . b) & \quad \forall j\in J k\in k_j \label{C4}\\
+		\sum_{i\in I} x_{ij} = p_j & \quad \forall j\in J \label{C5}\\\
+		X_{3j} \neq X_{8j} & \quad \forall j\in J \label{C6}\\
+		X_{6j} \neq X_{7j} & \quad \forall j\in J \label{C7}\\
+		X_{3j} \neq X_{12j} & \quad \forall j\in J \label{C8}\\
+		X_{10j} \neq X_{8j} & \quad \forall j\in J \label{C9}\\
+		H_{id} <= Md . W_{id} & \quad \forall i\in I, d\in D \label{C10}\\
+		\sum_{d\in D} W_{id} \leq 5 & \quad \forall i\in I \label{C11}\\
+		X_{ij} + X_{in} \leq 1 & \quad \forall i\in I, j\in J, n\in \{j \mid a_j = \text{Nightly telescope operation}\} \label{C12}\\
+		\sum_{i\in I, s\in S} Y_{is} = 5 & \label{C13}\\
+		\sum_{s\in S} Y_{is} \leq 1 & \quad \forall i\in I \label{C14}
+	\end{align}
+
+	The first two constraints (\ref{C1}, \ref{C15}) specify the binary variables used in the model where (\ref{C15})
+	is used for applying the additional training scores. Constraint (\ref{C2}) refers to the total time worked for worker $i$
+	Constraint (\ref{C3}) applies the limit of work hours for each worker. The constraint applied to $L_j$ specifies how the
+	total skill for each job. As seen in (\ref{C4}) it is the efficiency of worker $i$ in the skill required for job $j$
+	with the addition of a skill bonus if the worker $i$ had training.
+	The next constraint (\ref{C5}) ensures there is enough technicians to do job $j$.
+	From (\ref{C6}) to (\ref{C9}) ensure that certain collegues do not work together.
+	Constraint (\ref{C10}) connects the binary variable $W$ and hours worked on day $H$ such that if $W_{id} = 0$ then $H_{id} = 0$
+	and if $W_{id} = 1$ then $H_{id}$ can be up to the maximum hours a day $Md$.
+	The next constraint (\ref{C11}) ensures workers only work for a maximum of 5 days a week.
+	Constraint (\ref{C12}) causes any worker who is rostered on the night shift to have that as thier only job for that day.
+	Finally (\ref{C13}) and (\ref{C14}) refer to the the bonus efficiencies given to those who have training, the first constraint 
+	limits the number of workers who have training to 5, and the second states that each of the 5 workers chosen must be unique.
+\newpage
+
+\section*{Client Report}
+\subsection*{Ancestral skies staffing}
+In an attempt to keep this report consice, weekly scores are used to indicate the rostering.
+In the appendix tables showing the most effective rostering for each day produced by the final model are shown. 
+
+\subsection*{Communication 6}
+Given the set of tasks needing to be completed for the week and the time it takes to complete them a 
+total skill score acheived by the end of the week was found.
+With the application of the constraint that technichans could only work up to 36 hours a week and each task
+specifying the required amount of technichans to comlete the job, the score was 2676.9.
+
+\subsection*{Communication 7}
+To follow the kinship avoidance practices, additional constraints were put in such that the
+technician IDs given in the table below did not work together on a job.
+This reduced the total skill score to 2615.4, a decrease of 61.5.
+% table here
+\begin{table}[!ht]
+    \centering
+    \begin{tabular}{|l|l|l|l|l|l|l|l|l|l|}
+    \hline
+        Technician & 3 \& 8 & 6 \& 7 & 3 \& 12 & 8 \& 10\\ \hline
+    \end{tabular}
+\end{table}
+
+\subsection*{Communication 8}
+Shifting into the framework from weekly tasks to daily tasks with the addition of a maximum work load of 10 hours a day 
+for each technician, the new score for the week was 2530.4.
+There was once again a decrease as previously some technicians with higher skills worked more than 10 hours
+a day, but this constraint needs to redistribute the time to each technician such that some jobs may no longer 
+get the optimal technician for the job.
+To further examine the effect of adding time retrictions to daily work, I obsverved the total skill score that could be 
+acheived if you extend the hours up to 11 or down to 9 hours. The scores can be seen in the table below.
+
+
+\begin{table}[!ht]
+    \centering
+    \begin{tabular}{|l|l|l|l|l|l|}
+    \hline
+        Maximum daily work hours & 8 & 9 & 10 & 11 & 12 \\ \hline
+		Weekly skill score & infeasable & 2522.3 & 2530.4 &  2535.4 & 2539.4\\ \hline
+    \end{tabular}
+\end{table}
+
+As you can see in the table above, increasing the maximum hours a technician can work a day does increase the total 
+skill score for that week but only by at most 5. This may not be worth the increase if it increases costs of the project.
+On the other hand if we decrease the daily hours we find that the score decreased by 7.1 for 9 hours. Also we can see
+that 9 hours a day is the minimum amount of time required to complete all tasks described by the data as the 8 hour 
+limit returned a infeasable model.
+
+\subsection*{Communication 9}
+With the additional constraint of technichans rosterd to do "Nightly telescope operation" required not to do
+any tasks before hand on the same day, the score was once again reduced to 2489.3.
+Similarly to the previous communication, this decrease is due to lossing some efficincy from other
+jobs due to those who work the noght shift not being chosen for any day shifts.
+
+\subsection*{Communication 10 - Final Model}
+An assumption was made when incorperating the additional weekly training which was each
+technichan can only receive one training session each. This means, of the five technicians 
+receiving training they will all be unique and only increase in one skill only.
+By giving additional training to five technicians and increasing their score in one skill by seven, 
+this drastically improves the weekly score to 2979.3. The technicians you should train and the 
+skills they should improve are indicated in the table below.
+
+\begin{table}[!ht]
+    \centering
+    \begin{tabular}{|l|l|l|l|l|l|l|l|l|l|}
+    \hline
+        Technician & Skill \\ \hline
+        5 & Environment monitoring\\ \hline
+        6 & Mechanical maintenance\\ \hline
+        7 & Environment monitoring\\ \hline
+        10 & Environment monitoring\\ \hline
+        12 & Software operation\\ \hline
+    \end{tabular}
+\end{table} 
+
+However to give you an indication on whether a technician should be allowed to have multiple training sessions, the 
+total weekly score would remain 2979.3 with technician 9 receving 3 sessions. As there is no change in the result
+either model could be appropriate, but I will submit the model with the assumption stated an the begining of the
+section as it aligns more with the spirit of Ancestral skies supplying training and education to the community 
+as indicated in your breifing statement.\\
+
+\subsection*{Summary}
+It is worth noting that the model given only keeps track of the first week of applying this technicianing.
+Although the roster does not need to change to maintain the weekly score of 2979.3, it could be improved 
+if training at the beginning of each week continues and technicians scores keep increasing.
+The final rostering can be seen in the appendix below.
+
+\newpage{}
+\subsection*{Appendix}
+% Mon
+\begin{table}[!ht]
+\begin{tabular}{ll}
+\multicolumn{1}{c}{\textbf{Mon}}                                  & \multicolumn{1}{c}{\textbf{Technicians}} \\
+Electronics diagnostics and repair has technicians                & {[}0, 9{]}                               \\
+Real-time fault troubleshooting has technicians                   & {[}0, 9{]}                               \\
+Assembly and testing of mechanical fixtures has technicians       & {[}2, 12{]}                              \\
+Monitoring weather and system status has technicians              & {[}6{]}                                  \\
+Mentoring junior technician has technicians                            & {[}12{]}                                 \\
+IT and network maintenance has technicians                        & {[}1, 3{]}                               \\
+Updating and reviewing system logs has technicians                & {[}0, 10{]}                              \\
+Nightly telescope operation has technicians                       & {[}7, 11{]}                              \\
+Instrument calibration has technicians                            & {[}4, 6{]}                               \\
+Motorized component adjustments has technicians                   & {[}12{]}                                 \\
+Preparing dome and telescope for night operations has technicians & {[}9{]}                                  \\
+Optical alignment checks has technicians                          & {[}6, 8{]}                               \\
+Safety tests (interlocks and motion limits) has technicians       & {[}4{]}                                  \\
+Instrument data-acquisition monitoring has technicians            & {[}1{]}                                  \\
+Adaptive optics system validation has technicians                 & {[}2{]}                                  \\
+Documenting issues and proposed improvements has technicians      & {[}10{]}                                 \\
+Assisting astronomers with instrument setups has technicians      & {[}2{]}                                  \\
+Hardware installation and integration has technicians             & {[}3, 5{]}                               \\
+Testing remote‑observing systems has technicians                  & {[}1, 6{]}                               \\
+Preventive maintenance on control systems has technicians         & {[}4{]}                                  \\
+Cryogenic system checks has technicians                           & {[}0, 8{]}                               \\
+Sensor and actuator testing has technicians                       & {[}0{]}                                  \\
+Cleaning optical components has technicians                       & {[}5, 8{]}                               \\
+Facility maintenance (HVAC, water, power) has technicians         & {[}2, 12{]}                             
+\end{tabular}
+\end{table}
+
+% Tues
+\begin{table}[!ht]
+\begin{tabular}{ll}
+\multicolumn{1}{c}{\textbf{Tues}}                                 & \multicolumn{1}{c}{\textbf{Technicians}} \\
+Preventive maintenance on control systems has technicians         & {[}4, 5{]}                               \\
+Instrument calibration has technicians                            & {[}4{]}                                  \\
+Nightly telescope operation has technicians                       & {[}3, 11{]}                              \\
+Monitoring weather and system status has technicians              & {[}10{]}                                 \\
+Sensor and actuator testing has technicians                       & {[}0{]}                                  \\
+Electronics diagnostics and repair has technicians                & {[}0, 9{]}                               \\
+Drives and dome troubleshooting has technicians                   & {[}2, 12{]}                              \\
+Motorized component adjustments has technicians                   & {[}12{]}                                 \\
+Hardware installation and integration has technicians             & {[}5, 7, 8{]}                            \\
+Real-time fault troubleshooting has technicians                   & {[}0{]}                                  \\
+Instrument data-acquisition monitoring has technicians            & {[}9{]}                                  \\
+Preparing dome and telescope for night operations has technicians & {[}9{]}                                  \\
+Adaptive optics system validation has technicians                 & {[}2{]}                                  \\
+Cryogenic system checks has technicians                           & {[}0, 7{]}                               \\
+Facility maintenance (HVAC, water, power) has technicians         & {[}12{]}                                 \\
+Documenting issues and proposed improvements has technicians      & {[}10{]}                                 \\
+Testing weather‑monitoring systems has technicians                & {[}7, 10{]}                              \\
+Optical alignment checks has technicians                          & {[}8{]}                                  \\
+IT and network maintenance has technicians                        & {[}8, 9{]}                               \\                                      
+\end{tabular}
+\end{table}
+
+% Wed
+\begin{table}[!ht]
+\begin{tabular}{ll}
+\multicolumn{1}{c}{\textbf{Wed}}                                  & \multicolumn{1}{c}{\textbf{Technicians}} \\
+Monitoring weather and system status has technicians              & {[}6{]}                                  \\
+Electronics diagnostics and repair has technicians                & {[}0, 1{]}                               \\
+Software updates and testing has technicians                      & {[}7{]}                                  \\
+Structural and mechanical repairs has technicians                 & {[}2, 3{]}                               \\
+Instrument data-acquisition monitoring has technicians            & {[}1{]}                                  \\
+Cryogenic system checks has technicians                           & {[}0, 7{]}                               \\
+Mentoring junior technician has technicians                            & {[}4{]}                                  \\
+Assembly and testing of mechanical fixtures has technicians       & {[}2, 3{]}                               \\
+Testing remote‑observing systems has technicians                  & {[}1, 7{]}                               \\
+Instrument calibration has technicians                            & {[}4, 6{]}                               \\
+Testing weather‑monitoring systems has technicians                & {[}6{]}                                  \\
+Thermal management of dome and telescope has technicians          & {[}6{]}                                  \\
+Nightly telescope operation has technicians                       & {[}9{]}                                  \\
+Preparing dome and telescope for night operations has technicians & {[}7{]}                                  \\
+Coordinating instrument upgrades has technicians                  & {[}4{]}                                  \\                               
+\end{tabular}
+\end{table}
+
+% Thur
+\begin{table}[!ht]
+\begin{tabular}{ll}
+\multicolumn{1}{c}{\textbf{Thur}}                                  & \multicolumn{1}{c}{\textbf{Technicians}} \\
+Drives and dome troubleshooting has technicians                   & {[}0, 12{]}                              \\
+Adaptive optics system validation has technicians                 & {[}2{]}                                  \\
+Assisting astronomers with instrument setups has technicians      & {[}4{]}                                  \\
+Instrument data-acquisition monitoring has technicians            & {[}9{]}                                  \\
+IT and network maintenance has technicians                        & {[}8{]}                                  \\
+Mentoring junior technician has technicians                            & {[}4{]}                                  \\
+Cryogenic system checks has technicians                           & {[}0, 8{]}                               \\
+Monitoring weather and system status has technicians              & {[}6{]}                                  \\
+Electronics diagnostics and repair has technicians                & {[}9{]}                                  \\
+Real-time fault troubleshooting has technicians                   & {[}0, 9{]}                               \\
+Instrument calibration has technicians                            & {[}2, 4{]}                               \\
+Safety tests (interlocks and motion limits) has technicians       & {[}4{]}                                  \\
+Testing weather‑monitoring systems has technicians                & {[}6, 10{]}                              \\
+Nightly telescope operation has technicians                       & {[}3, 11{]}                              \\
+Optical alignment checks has technicians                          & {[}8, 12{]}                              \\
+Preparing dome and telescope for night operations has technicians & {[}9{]}                                  \\
+Documenting issues and proposed improvements has technicians      & {[}10{]}                                 \\
+Assembly and testing of mechanical fixtures has technicians       & {[}12{]}                                 \\                              
+\end{tabular}
+\end{table}
+
+% Fri
+\begin{table}[!ht]
+\begin{tabular}{ll}
+\multicolumn{1}{c}{\textbf{Fri}}                                  & \multicolumn{1}{c}{\textbf{Technicians}} \\
+Updating and reviewing system logs has technicians                & {[}10{]}                                 \\
+Preparing dome and telescope for night operations has technicians & {[}9{]}                                  \\
+Motorized component adjustments has technicians                   & {[}3{]}                                  \\
+Documenting issues and proposed improvements has technicians      & {[}10{]}                                 \\
+Electronics diagnostics and repair has technicians                & {[}9{]}                                  \\
+Assembly and testing of mechanical fixtures has technicians       & {[}2, 3{]}                               \\
+Instrument calibration has technicians                            & {[}2, 4{]}                               \\
+Monitoring weather and system status has technicians              & {[}6{]}                                  \\
+Instrument data-acquisition monitoring has technicians            & {[}1{]}                                  \\
+IT and network maintenance has technicians                        & {[}8, 9{]}                               \\
+Safety tests (interlocks and motion limits) has technicians       & {[}4{]}                                  \\
+Real-time fault troubleshooting has technicians                   & {[}9{]}                                  \\
+Nightly telescope operation has technicians                       & {[}5, 11{]}                              \\
+Testing weather‑monitoring systems has technicians                & {[}6, 10{]}                              \\
+Structural and mechanical repairs has technicians                 & {[}1, 2, 3{]}                            \\
+Thermal management of dome and telescope has technicians          & {[}6{]}                                  \\                                 
+\end{tabular}
+\end{table}
+
+% Sat
+\begin{table}[!ht]
+\begin{tabular}{ll}
+\multicolumn{1}{c}{\textbf{Sat}}                                  & \multicolumn{1}{c}{\textbf{Technicians}} \\
+Drives and dome troubleshooting has technicians                   & {[}0, 12{]}                              \\
+Thermal management of dome and telescope has technicians          & {[}6{]}                                  \\
+Cryogenic system checks has technicians                           & {[}0{]}                                  \\
+Instrument data-acquisition monitoring has technicians            & {[}1{]}                                  \\
+Documenting issues and proposed improvements has technicians      & {[}0{]}                                  \\
+Cleaning optical components has technicians                       & {[}8{]}                                  \\
+Mentoring junior technician has technicians                            & {[}12{]}                                 \\
+Assisting astronomers with instrument setups has technicians      & {[}12{]}                                 \\
+Testing remote‑observing systems has technicians                  & {[}1, 6{]}                               \\
+Nightly telescope operation has technicians                       & {[}7{]}                                  \\
+Optical alignment checks has technicians                          & {[}5, 8{]}                               \\
+Monitoring weather and system status has technicians              & {[}6{]}                                  \\
+Instrument calibration has technicians                            & {[}5, 6{]}                               \\
+Preventive maintenance on control systems has technicians         & {[}5{]}                                  \\
+Preparing dome and telescope for night operations has technicians & {[}5{]}                                  \\                                         
+\end{tabular}
+\end{table}
+
+% Sun
+\begin{table}[!ht]
+\begin{tabular}{ll}
+\multicolumn{1}{c}{\textbf{Sun}}                                  & \multicolumn{1}{c}{\textbf{Technicians}} \\
+Assisting astronomers with instrument setups has technicians      & {[}12{]}                                 \\
+Monitoring weather and system status has technicians              & {[}10{]}                                 \\
+Preparing dome and telescope for night operations has technicians & {[}5{]}                                  \\
+Nightly telescope operation has technicians                       & {[}11{]}                                 \\
+Documenting issues and proposed improvements has technicians      & {[}10{]}                                 \\
+Real-time fault troubleshooting has technicians                   & {[}1{]}                                  \\
+Electronics diagnostics and repair has technicians                & {[}1{]}                                  \\
+Mentoring junior technician has technicians                            & {[}12{]}                                 \\
+Instrument data-acquisition monitoring has technicians            & {[}1{]}                                  \\
+Safety tests (interlocks and motion limits) has technicians       & {[}5{]}                                  \\
+Software updates and testing has technicians                      & {[}7{]}                                  \\                                      
+\end{tabular}
+\end{table}
+
+\end{document}
